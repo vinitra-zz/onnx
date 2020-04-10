@@ -1765,7 +1765,8 @@ static const char* NegativeLogLikelihoodLoss_ver12_doc = R"DOC(
 A NegativeLogLikelihoodLoss operator computes (weighted) negative log likelihood loss.
 Its "input" tensor has the shape of (N, C, d1, d2, ..., dk) where k >= 0.
 The "input" tensor contains log-probabilities for input[n, :, d_1, d_2,..., d_k] being in a class of [0, C).
-The operator's "target" input tensor has the shape of (N, d1, d2, ..., dk). It encodes class labels (one of C classes) for N x d1 x d2 x ... x dk samples.
+The operator's "target" input tensor has the shape of (N, d1, d2, ..., dk). It encodes class labels (one of C classes)
+or it may contain a special value (indicated by an attribute ignore_index) for N x d1 x d2 x ... x dk samples.
 The loss value for input[n, :, d_1, d_2,...d_k] being classified as class c = target[n][d_1][d_2]...[d_k] is computed as:
 
     loss[n][d_1][d_2]...[d_k] = -input[n][c][d_1][d_2]...[d_k].
@@ -1773,6 +1774,10 @@ The loss value for input[n, :, d_1, d_2,...d_k] being classified as class c = ta
 When an optional "weight" is provided, the sample loss is calculated as:
 
     loss[n][d_1][d_2]...[d_k] = -input[n][c][d_1][d_2]...[d_k] * weight[c].
+
+loss is zero for the case when target-value equals ignore_index.
+    
+    loss[n][d_1][d_2]...[d_k] = 0, when target[n][d_1][d_2]...[d_k] = ignore_index
 
 If "reduction" attribute is set to "none", the operator's output will be the above loss with shape (N, d1, d2, ..., dk).
 If "reduction" attribute is set to "mean" (the default attribute value), the output loss is (weight) averaged:
@@ -1862,28 +1867,34 @@ bool BuildContextDependentFunctionBody(
     const OpSchema& schema,
     FunctionProto& functionProto) {
   std::vector<FunctionBodyHelper::NodeDef> body;
-  body.push_back({{"expanded_target"},
-                  "Unsqueeze",
-                  {"target"},
-                  {MakeAttribute("axes", std::vector<int64_t>({1}))}});
-  body.push_back({{"input_gather_element"},
-                  "GatherElements",
-                  {"input", "expanded_target"},
-                  {MakeAttribute("axis", (int64_t)1)}});
-  body.push_back({{"loss_NCdd"}, "Neg", {"input_gather_element"}});
   body.push_back({{"const_zero"},
                   "Constant",
                   {},
                   {MakeAttribute("value", ToDimensionOneTensor(0))}});
+
   body.push_back({{"const_one"},
                   "Constant",
                   {},
                   {MakeAttribute("value", ToDimensionOneTensor(1))}});
-  body.push_back({{"loss_N1dd"},
-                  "Slice",
-                  {"loss_NCdd", "const_zero", "const_one", "const_one"}});
+  
+  body.push_back({{"expanded_target"},
+              "Unsqueeze",
+              {"target"},
+              {MakeAttribute("axes", std::vector<int64_t>({1}))}});
 
   if (ctx.getAttribute("ignore_index") == nullptr) {
+
+    body.push_back({{"input_gather_element"},
+                    "GatherElements",
+                    {"input", "expanded_target"},
+                    {MakeAttribute("axis", (int64_t)1)}});
+
+    body.push_back({{"loss_NCdd"}, "Neg", {"input_gather_element"}});
+
+    body.push_back({{"loss_N1dd"},
+                    "Slice",
+                    {"loss_NCdd", "const_zero", "const_one", "const_one"}});
+
     if (!ctx.hasInput(2)) {
       if (ctx.getAttribute("reduction")->s() == "none") {
         body.push_back({{"loss"},
@@ -1944,31 +1955,46 @@ bool BuildContextDependentFunctionBody(
          {MakeAttribute(
              "value",
              ToDimensionOneTensor(ctx.getAttribute("ignore_index")->i()))}});
+
+    body.push_back({{"mask"}, "Equal", {"expanded_target", "const_ignore_index"}});
+    body.push_back({{"transform_targets"}, "Where", {"mask", "const_zero", "expanded_target"}});
+    body.push_back({{"input_gather_element"}, "GatherElements", {"input", "transform_targets"}, {MakeAttribute("axis", (int64_t)1)}});
     body.push_back({{"const_zero_float"},
-                    "Constant",
-                    {},
-                    {MakeAttribute("value", ToDimensionOneFloatTensor(0.0f))}});
+                "Constant",
+                {},
+                {MakeAttribute("value", ToDimensionOneFloatTensor(0.0f))}});
+
+    body.push_back(
+        {{"input_gather_element_transform"}, "Where", {"mask", "const_zero_float", "input_gather_element"}});
+    body.push_back({{"loss_NCdd"}, "Neg", {"input_gather_element_transform"}});
+    body.push_back({{"loss_N1dd"},
+                    "Slice",
+                    {"loss_NCdd", "const_zero", "const_one", "const_one"}});
+
     if (!ctx.hasInput(2)) {
-      body.push_back({{"input_shape"}, "Shape", {"input"}});
-      body.push_back({{"input_class"},
-                      "Slice",
-                      {"input_shape", "const_one", "const_one"}});
-      body.push_back({{"const_weights_ones"},
-                      "ConstantOfShape",
-                      {"input_class"},
-                      {MakeAttribute("value", ToDimensionOneFloatTensor(1))}});
-      body.push_back(
-          {{"weights_default"},
-           "ScatterElements",
-           {"const_weights_ones", "const_ignore_index", "const_zero_float"}});
-      body.push_back(
-          {{"weight_gather"}, "Gather", {"weights_default", "target"}});
+      body.push_back({{"squeeze_mask"},
+                "Squeeze",
+                {"mask"},
+                {MakeAttribute("axes", std::vector<int64_t>({1}))}});
+
+    body.push_back({{"const_one_float"},
+                "Constant",
+                {},
+                {MakeAttribute("value", ToDimensionOneFloatTensor(1.0f))}});
+
+      body.push_back({{"weight_gather"}, "Where", {"squeeze_mask", "const_zero_float", "const_one_float"}});
+
     } else {
-      body.push_back({{"weights_default"},
-                      "ScatterElements",
-                      {"weight", "const_ignore_index", "const_zero_float"}});
       body.push_back(
-          {{"weight_gather"}, "Gather", {"weights_default", "target"}});
+      {{"weight_gather_temp"}, "Gather", {"weight", "transform_targets"}});
+
+      body.push_back(
+      {{"weight_gather_temp_1"}, "Where", {"mask", "const_zero_float", "weight_gather_temp"}});
+
+      body.push_back({{"weight_gather"},
+          "Squeeze",
+          {"weight_gather_temp_1"},
+          {MakeAttribute("axes", std::vector<int64_t>({1}))}});
     }
 
     body.push_back({{"loss_unweighted"},
@@ -2022,7 +2048,9 @@ ONNX_OPERATOR_SET_SCHEMA(
         .Input(
             1,
             "target",
-            "Target tensor of shape (N) or (N, d1, d2, ..., dk). Target element value shall be in range of [0, C).",
+            "Target tensor of shape (N) or (N, d1, d2, ..., dk). Target element value shall be in range of [0, C). "
+            "If ignore_index is specified, it may have a value outside [0, C) and the target values should either be "
+            "in the range [0, C) or have the value ignore_index.",
             "Tind")
         .Input(
             2,
@@ -2042,8 +2070,7 @@ ONNX_OPERATOR_SET_SCHEMA(
             std::string("mean"))
         .Attr(
             "ignore_index",
-            "Specifies a target value that is ignored and does not contribute to the input gradient. "
-            "It is an optional value and valid values are [0, C).",
+            "Specifies a target value that is ignored and does not contribute to the input gradient. It's an optional value.",
             AttributeProto::INT,
             false)
         .TypeConstraint(
@@ -2151,17 +2178,17 @@ void einsumRankInference(
 
   // Parse the left-hand side
   std::stringstream str(left_equation);
-  while (std::getline(str, term, ',')) {
+  while (!str.eof()) {
+    std::getline(str, term, ',');
     auto ellipsis_index = term.find("...");
+    if (numInputs <= num_operands) {
+      fail_shape_inference(
+          "Number of input tensors does not match the operands in the equation.");
+    }
+    size_t rank = ctx.getInputType(num_operands)->tensor_type().shape().dim_size();
     if (ellipsis_index != std::string::npos) {
-      if (numInputs <= num_operands) {
-        fail_shape_inference(
-            "Number of input tensors does not match the operands in the equation.");
-      }
       // If there is an ellipsis, the number of dimensions it represents
       // must be total dim - letter dimensions
-      size_t rank =
-          ctx.getInputType(num_operands)->tensor_type().shape().dim_size();
       if (num_ellipsis == 0) {
         if (rank + 3 < term.size()) {
           fail_shape_inference("Ellipsis represents incompatible dimensions.");
@@ -2174,6 +2201,10 @@ void einsumRankInference(
         }
       }
       num_ellipsis++;
+    } else {
+      if (rank != term.size()) {
+        fail_shape_inference("Rank of input ", num_operands, " does not match the equation indices.");
+      }
     }
     num_operands++;
   }
@@ -2241,6 +2272,7 @@ equation.
 When a dimension character is repeated in the left-hand side, it represents summation along the dimension.
 
 The equation may contain ellipsis ("...") to enable broadcasting. Ellipsis must indicate a fixed number of dimensions.
+Specifically, every occurrence of ellipsis in the equation must represent the same number of dimensions.
 The right-hand side may contain exactly one ellipsis. In implicit mode, the ellipsis dimensions are set to the
 beginning of the output. The equation string may contain space (U+0020) character.
 )DOC";
@@ -2270,8 +2302,10 @@ ONNX_OPERATOR_SET_SCHEMA(
 static const char* Inverse_ver12_doc = R"DOC(
 Calculates inverse of a square matrix or batches of square matrices.
 Inverse takes one input tensor of shape `[*, M, M]`, where `*` is zero or more batch dimensions,
-and the inner-most 2 dimensions form square matrices.
-The output is a tensor of shape `[*, M, M]`, containing the individual inverses of all input submatrices.
+and the inner-most 2 dimensions form square matrices. These matrices must be invertible (full-rank).
+The behavior where one of the matrices is not invertible is undefined. The implementation can choose
+to throw an error or output (garbage) results as is. The output is a tensor of shape `[*, M, M]`,
+containing the individual inverses of all input submatrices.
 )DOC";
 
 ONNX_OPERATOR_SET_SCHEMA(
@@ -2279,12 +2313,14 @@ ONNX_OPERATOR_SET_SCHEMA(
     12,
     OpSchema()
         .SetDoc(Inverse_ver12_doc)
-        .Input(0, "X", "Input tensor", "T")
-        .Output(0, "Y", "Output tensor of the same type as input.", "T")
+        .Input(0, "X", "Input tensor. Every matrix in the batch must be invertible.", "T")
+        .Output(0, "Y", "Output tensor of the same type and shape as the input tensor.", "T")
         .TypeConstraint(
             "T",
-            OpSchema::all_numeric_types(),
-            "Constrain input and output types to all numerical tensor types.")
+            {"tensor(float16)",
+             "tensor(float)",
+             "tensor(double)"},
+            "Constrain input and output types to float tensors.")
         .TypeAndShapeInferenceFunction([](InferenceContext& ctx) {
           // Type inference
           propagateElemTypeFromInputToOutput(ctx, 0, 0);
@@ -2471,6 +2507,9 @@ The loss for one sample, l_i, can caculated as follows:
 or
     l[i][d1][d2]...[dk] = -y[i][c][d1][d2]..[dk] * weights[c], if 'weights' is provided.
 
+loss is zero for the case when label-value equals ignore_index.
+    l[i][d1][d2]...[dk]  = 0, when labels[n][d1][d2]...[dk] = ignore_index
+
 where:
     p = Softmax(scores)
     y = Log(p)
@@ -2544,8 +2583,7 @@ ONNX_OPERATOR_SET_SCHEMA(
             std::string("mean"))
         .Attr(
             "ignore_index",
-            "Specifies a target value that is ignored and does not contribute to the input gradient. "
-            "It is an optional value and valid values are [0, C).",
+            "Specifies a target value that is ignored and does not contribute to the input gradient. It's an optional value.",
             AttributeProto::INT,
             false)
         .Input(
@@ -2558,7 +2596,10 @@ ONNX_OPERATOR_SET_SCHEMA(
             1,
             "labels",
             "The ground truth output tensor, with shape [batch_size], or "
-            "[batch_size, D1, D2, ..., Dk], where K is the number of dimensions.",
+            "[batch_size, D1, D2, ..., Dk], where K is the number of dimensions. "
+            "Labels element value shall be in range of [0, C). "
+            "If ignore_index is specified, it may have a value outside [0, C) and the label values should either be "
+            "in the range [0, C) or have the value ignore_index.",
             "Tind")
         .Input(
             2,
