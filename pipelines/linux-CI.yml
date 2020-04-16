@@ -26,9 +26,8 @@ jobs:
   - script: |
 
       # install protobuf
-      mkdir -p "$pb_dir"
       wget -qO- "https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protobuf-${PB_VERSION}.tar.gz" | tar -xz -C "$pb_dir" --strip-components 1
-      cd "$pb_dir" && ./configure && make -j${NUMCORES} && make check && sudo make install && sudo ldconfig && cd -
+      ./configure && make -j${NUMCORES} && make check && sudo make install && sudo ldconfig && cd -
 
       # Update all existing python packages
       python -m pip install --upgrade pip
