@@ -1,0 +1,59 @@
+
+trigger:
+- master
+
+jobs:
+- job: 'Test macOS'
+  pool:
+    vmImage: 'macOS-10.14'
+  strategy:
+    matrix:
+      py3:
+        python.version: '3.6'
+        PB_VERSION: 2.6.1
+        ONNX_ML: 0
+    maxParallel: 3
+
+  steps:
+  - script: sudo install -d -m 0777 /home/vsts/.conda/envs
+    displayName: Fix Conda permissions
+  - task: CondaEnvironment@1
+    inputs:
+      createCustomEnvironment: true
+      environmentName: 'py$(python.version)'
+      packageSpecs: 'python=$(python.version)'
+
+  - script: |
+      python -m pip install --upgrade pip
+      python -m pip install --quiet -U setuptools dos2unix protobuf
+      brew update
+      brew install ccache protobuf
+    displayName: 'Install dependencies'
+
+
+  - script: |
+      set ONNX_ML=${ONNX_ML}
+      python setup.py --quiet bdist_wheel --universal --dist-dir .
+      find . -maxdepth 1 -name "*.whl" -ls -exec pip install {} \;
+    displayName: 'Install ONNX'
+
+  - script: |
+      pip install --quiet pytest nbval
+      pytest
+
+      pip install --quiet flake8
+      flake8
+
+      find . -type f -regextype posix-extended -regex '.*\.(py|cpp|md|h|cc|proto|proto3|in)' | xargs dos2unix --quiet
+      git status
+      git diff --exit-code
+
+      python onnx/defs/gen_doc.py
+      python onnx/gen_proto.py -l
+      python onnx/gen_proto.py -l --ml
+      python onnx/backend/test/stat_coverage.py
+      backend-test-tools generate-data
+      git status
+      git diff --exit-code
+
+    displayName: 'testing script'
