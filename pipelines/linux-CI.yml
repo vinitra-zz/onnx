@@ -8,7 +8,7 @@ jobs:
     vmImage: 'Ubuntu-16.04'
   strategy:
     matrix:
-      py27:
+      py3:
         PB_VERSION: 2.6.1
         PYTHON_VERSION: 3
         ONNX_ML: 0
@@ -22,9 +22,7 @@ jobs:
       # install protobuf
       mkdir -p "$pb_dir"
       wget -qO- "https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protobuf-${PB_VERSION}.tar.gz" | tar -xz -C "$pb_dir" --strip-components 1
-      ccache -z
       cd "$pb_dir" && ./configure && make -j${NUMCORES} && make check && sudo make install && sudo ldconfig && cd -
-      ccache -s
 
       # Update all existing python packages
       python -m pip install --upgrade pip
