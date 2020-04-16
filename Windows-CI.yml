@@ -47,7 +47,7 @@ jobs:
       python onnx/gen_proto.py -l
       python onnx/gen_proto.py -l --ml
 
-      pip uninstall -y %_wheel%
+      # pip uninstall -y %_wheel%
       rm -rf .setuptools-cmake-build
       pip install --quiet -e .[mypy]
       python setup.py typecheck
