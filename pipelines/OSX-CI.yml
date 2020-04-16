@@ -13,7 +13,6 @@ jobs:
         ONNX_ML: 0
     maxParallel: 3
 
-
   - task: CondaEnvironment@1
     inputs:
       createCustomEnvironment: true
@@ -26,7 +25,6 @@ jobs:
       brew update
       brew install ccache protobuf
     displayName: 'Install dependencies'
-
 
   - script: |
       set ONNX_ML=${ONNX_ML}
