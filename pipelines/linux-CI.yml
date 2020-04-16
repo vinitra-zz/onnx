@@ -25,13 +25,13 @@ jobs:
 
   - script: |
 
-      # install protobuf
-      wget -qO- "https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protobuf-${PB_VERSION}.tar.gz" | tar -xz -C "$pb_dir" --strip-components 1
-      ./configure && make -j${NUMCORES} && make check && sudo make install && sudo ldconfig && cd -
+      # # install protobuf
+      # wget -qO- "https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protobuf-${PB_VERSION}.tar.gz" | tar -xz -C "$pb_dir" --strip-components 1
+      # ./configure && make -j${NUMCORES} && make check && sudo make install && sudo ldconfig && cd -
 
       # Update all existing python packages
       python -m pip install --upgrade pip
-      python -m pip install --quiet -U setuptools dos2unix
+      python -m pip install --quiet -U setuptools dos2unix protobuf
       python -m pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U --quiet
 
     displayName: 'Install dependencies'
