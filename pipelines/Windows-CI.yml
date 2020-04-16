@@ -29,7 +29,8 @@ jobs:
       python -m pip install --upgrade pip
       python -m pip install --quiet pytest nbval numpy
 
-      ls
+      python setup.py --quiet bdist_wheel --universal --dist-dir .
+      pip install *.whl
 
       cd onnx
       git submodule update --init --recursive
