@@ -27,7 +27,7 @@ jobs:
   - script: |
       call activate py$(python.version)
       python -m pip install --upgrade pip
-      python -m pip install --quiet pytest nbval numpy
+      python -m pip install --quiet pytest nbval numpy protobuf-compiler
 
       python setup.py --quiet bdist_wheel --universal --dist-dir .
       python -m pip install *.whl
