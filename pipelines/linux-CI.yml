@@ -8,41 +8,41 @@ jobs:
     vmImage: 'Ubuntu-16.04'
   strategy:
     matrix:
-      py27:
+      py3:
+        python.version: '3.6'
         PB_VERSION: 2.6.1
-        PYTHON_VERSION: 3
         ONNX_ML: 0
     maxParallel: 3
 
   steps:
+  - script: sudo install -d -m 0777 /home/vsts/.conda/envs
+    displayName: Fix Conda permissions
+  - task: CondaEnvironment@1
+    inputs:
+      createCustomEnvironment: true
+      environmentName: 'py$(python.version)'
+      packageSpecs: 'python=$(python.version)'
+
   - script: |
-      sudo apt-get update
-      sudo apt-get install -y --no-install-recommends dos2unix
 
       # install protobuf
-      mkdir -p "$pb_dir"
-      wget -qO- "https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protobuf-${PB_VERSION}.tar.gz" | tar -xz -C "$pb_dir" --strip-components 1
-      ccache -z
-      cd "$pb_dir" && ./configure && make -j${NUMCORES} && make check && sudo make install && sudo ldconfig && cd -
-      ccache -s
+      # wget -qO- "https://github.com/google/protobuf/releases/download/v${PB_VERSION}/protobuf-${PB_VERSION}.tar.gz" | tar -xz -C "$pb_dir" --strip-components 1
+      # ./configure && make -j${NUMCORES} && make check && sudo make install && sudo ldconfig && cd -
 
       # Update all existing python packages
       python -m pip install --upgrade pip
-      python -m pip install --quiet -U pip setuptools
-      python -m pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U --quiet
+      python -m pip install --quiet -U setuptools dos2unix protobuf
 
     displayName: 'Install dependencies'
 
 
   - script: |
-      script_path=$(python -c "import os; import sys; print(os.path.realpath(sys.argv[1]))" "${BASH_SOURCE[0]}")
-      source "${script_path%/*}/setup.sh"
-
       # onnx c++ API tests
-      export LD_LIBRARY_PATH="${top_dir}/.setuptools-cmake-build/:$LD_LIBRARY_PATH"
-      # do not use find -exec here, it would ignore the segement fault of gtest.
-      ./.setuptools-cmake-build/onnx_gtests
-      ./.setuptools-cmake-build/onnxifi_test_driver_gtests onnx/backend/test/data/node
+      # export LD_LIBRARY_PATH="${top_dir}/.setuptools-cmake-build/:$LD_LIBRARY_PATH"
+      # # do not use find -exec here, it would ignore the segement fault of gtest.
+      # ./.setuptools-cmake-build/onnx_gtests
+      # ./.setuptools-cmake-build/onnxifi_test_driver_gtests onnx/backend/test/data/node
+      set ONNX_ML=${ONNX_ML}
 
       # onnx python API tests
       pip install --quiet pytest nbval
@@ -66,16 +66,4 @@ jobs:
       git status
       git diff --exit-code
 
-      # Do not hardcode onnx's namespace in the c++ source code, so that
-      # other libraries who statically link with onnx can hide onnx symbols
-      # in a private namespace.
-      ! grep -R --include='*.cc' --include='*.h' 'namespace onnx' .
-      ! grep -R --include='*.cc' --include='*.h' 'onnx::' .
     displayName: 'testing script'
-
-
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: '**/test-results.xml'
-      testRunTitle: 'Python $(python.version)'
-    condition: succeededOrFailed()
