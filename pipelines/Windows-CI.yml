@@ -30,7 +30,7 @@ jobs:
       python -m pip install --quiet pytest nbval numpy
 
       python setup.py --quiet bdist_wheel --universal --dist-dir .
-      pip install *.whl
+      python -m pip install *.whl
 
       cd onnx
       git submodule update --init --recursive
