@@ -29,7 +29,7 @@ jobs:
       python -m pip install --upgrade pip
       python -m pip install --quiet pytest nbval numpy
 
-      echo ls
+      ls
 
       cd onnx
       git submodule update --init --recursive
@@ -37,17 +37,12 @@ jobs:
       
       set USE_MSVC_STATIC_RUNTIME=0
       set CMAKE_ARGS=-DONNX_USE_PROTOBUF_SHARED_LIBS=ON -DProtobuf_USE_STATIC_LIBS=OFF -DONNX_USE_LITE_PROTO=ON
-      # python setup.py --quiet bdist_wheel --universal --dist-dir .
-      # dir /s /b /a-d "onnx_gtests.exe" >UT.txt & set /p _UT= < UT.txt & %_UT%
-      # dir /b /a-d "*.whl" >WheelFile.txt & set /p _wheel= < WheelFile.txt
-      # pip install %_wheel%
-
+ 
       pytest
       python onnx/defs/gen_doc.py
       python onnx/gen_proto.py -l
       python onnx/gen_proto.py -l --ml
 
-      # pip uninstall -y %_wheel%
       rm -rf .setuptools-cmake-build
       pip install --quiet -e .[mypy]
       python setup.py typecheck
