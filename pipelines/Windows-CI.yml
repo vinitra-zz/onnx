@@ -10,6 +10,7 @@ jobs:
     matrix:
       Python36:
         python.version: '3.6'
+        onnx_ml: 0
     maxParallel: 3
 
   steps:
@@ -32,6 +33,7 @@ jobs:
       cd onnx
       git submodule update --init --recursive
       set ONNX_BUILD_TESTS=1
+      set ONNX_ML=$(onnx_ml)
       
       set USE_MSVC_STATIC_RUNTIME=0
       set CMAKE_ARGS=-DONNX_USE_PROTOBUF_SHARED_LIBS=ON -DProtobuf_USE_STATIC_LIBS=OFF -DONNX_USE_LITE_PROTO=ON
