@@ -37,7 +37,7 @@ jobs:
       set USE_MSVC_STATIC_RUNTIME=0
       set CMAKE_ARGS=-DONNX_USE_PROTOBUF_SHARED_LIBS=ON -DProtobuf_USE_STATIC_LIBS=OFF -DONNX_USE_LITE_PROTO=ON
  
-      python setup.py --quiet install .
+      python setup.py --quiet install
 
       pytest
       python onnx/defs/gen_doc.py
