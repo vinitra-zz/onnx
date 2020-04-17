@@ -32,6 +32,7 @@ jobs:
   - script: |
       python -m pip install --upgrade pip
       python -m pip install --quiet -U dos2unix
+      python -m pip install numpy
       git submodule update --init --recursive
       set ONNX_ML=${onnx_ml}
       set ONNX_BUILD_TESTS=1
