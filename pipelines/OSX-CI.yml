@@ -18,10 +18,9 @@ jobs:
       versionSpec: '$(python.version)'
 
   - script: |
-      conda install -c conda-forge protobuf numpy
+      brew install protobuf
       set ONNX_ML=${ONNX_ML}
       set ONNX_BUILD_TESTS=1
-      sudo apt-get install protobuf-compiler libprotoc-dev
       
       set USE_MSVC_STATIC_RUNTIME=0
       set CMAKE_ARGS=-DONNX_USE_PROTOBUF_SHARED_LIBS=ON -DProtobuf_USE_STATIC_LIBS=OFF -DONNX_USE_LITE_PROTO=ON
