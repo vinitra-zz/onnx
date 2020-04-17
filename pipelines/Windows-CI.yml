@@ -8,9 +8,16 @@ jobs:
     vmImage: 'vs2017-win2016'
   strategy:
     matrix:
-      Python36:
+      py37:
+        python.version: '3.7'
+        onnx_ml: 0
+      py36:
         python.version: '3.6'
         onnx_ml: 0
+      py36-verify:
+        python.version: '3.6'
+        onnx_ml: 0
+        onnx_verify_proto: 1
     maxParallel: 3
 
   steps:
@@ -38,7 +45,9 @@ jobs:
       set CMAKE_ARGS=-DONNX_USE_PROTOBUF_SHARED_LIBS=ON -DProtobuf_USE_STATIC_LIBS=OFF -DONNX_USE_LITE_PROTO=ON
  
       python setup.py --quiet install
+    displayName: Install dependencies and onnx
 
+  - script: |
       pytest
       python onnx/defs/gen_doc.py
       python onnx/gen_proto.py -l
@@ -49,4 +58,4 @@ jobs:
       python setup.py typecheck
 
       git diff --exit-code
-    displayName: Install and test onnx
+    displayName: Test ONNX
