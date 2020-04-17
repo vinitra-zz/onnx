@@ -8,7 +8,7 @@ jobs:
     vmImage: 'Ubuntu-16.04'
   strategy:
     matrix:
-      py3:
+      py36:
         python.version: '3.6'
         PB_VERSION: 2.6.1
         ONNX_ML: 0
@@ -22,7 +22,7 @@ jobs:
     inputs:
       createCustomEnvironment: true
       environmentName: 'py$(python.version)'
-      packageSpecs: 'python=$(python.version) -c conda-forge protobuf'
+      packageSpecs: 'python=$(python.version) protobuf'
 
   - script: |
       python -m pip install --upgrade pip
