@@ -7,9 +7,15 @@ jobs:
     vmImage: 'macOS-10.14'
   strategy:
     matrix:
-      py3:
+      py27:
+        python.version: '2.7'
+        onnx_ml: 0
+      py36:
         python.version: '3.6'
-        ONNX_ML: 0
+        onnx_ml: 0
+      py36-onnx-ml:
+        python.version: '3.6'
+        onnx_ml: 1
     maxParallel: 3
 
   steps:
@@ -20,7 +26,7 @@ jobs:
   - script: |
       git submodule update --init --recursive
       conda install -c conda-forge pybind11 protobuf numpy
-      set ONNX_ML=${ONNX_ML}
+      set ONNX_ML=${onnx_ml}
       set ONNX_BUILD_TESTS=1
       brew install protobuf
       set USE_MSVC_STATIC_RUNTIME=0
