@@ -19,7 +19,7 @@ jobs:
 
   - script: |
       brew install protobuf
-      conda install pybind11 -c conda-forge
+      conda install -c conda-forge pybind11 protobuf numpy
       set ONNX_ML=${ONNX_ML}
       set ONNX_BUILD_TESTS=1
       
