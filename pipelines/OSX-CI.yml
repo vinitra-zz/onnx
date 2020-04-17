@@ -25,10 +25,11 @@ jobs:
 
   - script: |
       git submodule update --init --recursive
-      conda install -c conda-forge pybind11 protobuf numpy
+      python -m pip install --upgrade setuptools
+      python -m pip install numpy
+      conda install -c conda-forge pybind11 protobuf
       set ONNX_ML=${onnx_ml}
       set ONNX_BUILD_TESTS=1
-      brew install protobuf
       set USE_MSVC_STATIC_RUNTIME=0
       set CMAKE_ARGS=-DONNX_USE_PROTOBUF_SHARED_LIBS=ON -DProtobuf_USE_STATIC_LIBS=OFF -DONNX_USE_LITE_PROTO=ON
       python setup.py --quiet install
