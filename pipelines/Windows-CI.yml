@@ -14,10 +14,6 @@ jobs:
       py36:
         python.version: '3.6'
         onnx_ml: 0
-      py36-verify:
-        python.version: '3.6'
-        onnx_ml: 0
-        onnx_verify_proto: 1
     maxParallel: 3
 
   steps:
@@ -39,8 +35,7 @@ jobs:
       
       git submodule update --init --recursive
       set ONNX_BUILD_TESTS=1
-      set ONNX_ML=$(onnx_ml)
-      
+      set ONNX_ML=$(onnx_ml)      
       set USE_MSVC_STATIC_RUNTIME=0
       set CMAKE_ARGS=-DONNX_USE_PROTOBUF_SHARED_LIBS=ON -DProtobuf_USE_STATIC_LIBS=OFF -DONNX_USE_LITE_PROTO=ON
  
