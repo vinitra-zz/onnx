@@ -16,7 +16,7 @@ jobs:
         python.version: '3.6'
         onnx_ml: 0
         onnx_verify_proto: 0
-      onnx_ml_py37:
+      py37_onnx_ml:
         python.version: '3.7'
         onnx_ml: 1
         onnx_verify_proto: 0
