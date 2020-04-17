@@ -24,7 +24,7 @@ jobs:
         python.version: '3.6'
         onnx_ml: 0
         onnx_verify_proto: 1
-    maxParallel: 3
+    maxParallel: 4
 
   steps:
   - task: UsePythonVersion@0
