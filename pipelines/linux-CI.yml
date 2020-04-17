@@ -15,14 +15,8 @@ jobs:
     maxParallel: 3
 
   steps:
-  - script: sudo install -d -m 0777 /home/vsts/.conda/envs
-    displayName: Fix Conda permissions
-
-  - task: CondaEnvironment@1
-    inputs:
-      createCustomEnvironment: true
-      environmentName: 'py$(python.version)'
-      packageSpecs: 'python=$(python.version) protobuf'
+  - script: conda create --yes --quiet --name py$(python.version) -c conda-forge python=$(python.version) numpy libprotobuf=3.11.3 protobuf 
+    displayName: Create Anaconda environment
 
   - script: |
       python -m pip install --upgrade pip
