@@ -22,7 +22,7 @@ jobs:
       conda install -c conda-forge pybind11 protobuf numpy
       set ONNX_ML=${ONNX_ML}
       set ONNX_BUILD_TESTS=1
-      
+      brew install protobuf
       set USE_MSVC_STATIC_RUNTIME=0
       set CMAKE_ARGS=-DONNX_USE_PROTOBUF_SHARED_LIBS=ON -DProtobuf_USE_STATIC_LIBS=OFF -DONNX_USE_LITE_PROTO=ON
 
