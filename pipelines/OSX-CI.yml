@@ -9,7 +9,6 @@ jobs:
     matrix:
       py3:
         python.version: '3.6'
-        PB_VERSION: 2.6.1
         ONNX_ML: 0
     maxParallel: 3
 
