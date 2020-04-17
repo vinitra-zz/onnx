@@ -18,17 +18,11 @@ jobs:
       versionSpec: '$(python.version)'
 
   - script: |
-      python -m pip install --upgrade pip
-      python -m pip install --quiet -U setuptools dos2unix
-      brew update
-      brew install protobuf
-    displayName: 'Install dependencies'
-
-  - script: |
+      conda install -c conda-forge protobuf numpy
       set ONNX_ML=${ONNX_ML}
       python setup.py --quiet bdist_wheel --universal --dist-dir .
       find . -maxdepth 1 -name "*.whl" -ls -exec pip install {} \;
-    displayName: 'Install ONNX'
+    displayName: 'Install dependencies and ONNX'
 
   - script: |
       pip install --quiet pytest nbval
