@@ -30,7 +30,6 @@ jobs:
       python -m pip install --upgrade pip
       python -m pip install --quiet pytest nbval numpy
       
-      cd onnx
       git submodule update --init --recursive
       set ONNX_BUILD_TESTS=1
       set ONNX_ML=$(onnx_ml)
