@@ -15,14 +15,19 @@ jobs:
     maxParallel: 3
 
   steps:
-  - task: UsePythonVersion@0
+  - script: sudo install -d -m 0777 /home/vsts/.conda/envs
+    displayName: Fix Conda permissions
+
+  - task: CondaEnvironment@1
     inputs:
-      versionSpec: '$(python.version)'
+      createCustomEnvironment: true
+      environmentName: 'py$(python.version)'
+      packageSpecs: 'python=$(python.version)'
 
   - script: |
       python -m pip install --upgrade pip
       python -m pip install --quiet -U setuptools dos2unix
-      conda install -c conda-forge protobuf numpy
+      conda install -c conda-forge protobuf
       git submodule update --init --recursive
       set ONNX_ML=${ONNX_ML}
       set ONNX_BUILD_TESTS=1
