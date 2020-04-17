@@ -22,12 +22,11 @@ jobs:
     inputs:
       createCustomEnvironment: true
       environmentName: 'py$(python.version)'
-      packageSpecs: 'python=$(python.version)'
+      packageSpecs: 'python=$(python.version) -c conda-forge protobuf'
 
   - script: |
       python -m pip install --upgrade pip
-      python -m pip install --quiet -U setuptools dos2unix
-      conda install -c conda-forge protobuf
+      python -m pip install --quiet -U dos2unix
       git submodule update --init --recursive
       set ONNX_ML=${ONNX_ML}
       set ONNX_BUILD_TESTS=1
