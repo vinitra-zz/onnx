@@ -47,8 +47,8 @@ endif()
 
  if (ONNX_USE_PROTOBUF_SHARED_LIBS)
   if(MSVC)
-    #TODO: if ONNX_USE_MSVC_STATIC_RUNTIME is ON, it may not work  
-    add_definitions(-DPROTOBUF_USE_DLLS)  
+    #TODO: if ONNX_USE_MSVC_STATIC_RUNTIME is ON, it may not work
+    add_definitions(-DPROTOBUF_USE_DLLS)
   endif()
 endif()
 
@@ -302,6 +302,15 @@ relative_protobuf_generate_cpp(gen_onnx_operators_proto
 list(APPEND ONNX_PROTO_SRCS ${__tmp_srcs})
 list(APPEND ONNX_PROTO_HDRS ${__tmp_hdrs})
 
+relative_protobuf_generate_cpp(gen_onnx_data_proto
+                               __tmp_srcs
+                               __tmp_hdrs
+                               ${ONNX_ROOT}
+                               gen_onnx_proto
+                               onnx/onnx-data.in.proto)
+list(APPEND ONNX_PROTO_SRCS ${__tmp_srcs})
+list(APPEND ONNX_PROTO_HDRS ${__tmp_hdrs})
+
 file(GLOB_RECURSE __tmp_srcs "${ONNX_ROOT}/onnx/*.h" "${ONNX_ROOT}/onnx/*.cc")
 file(GLOB_RECURSE onnx_gtests_src "${ONNX_ROOT}/onnx/test/cpp/*.h"
     "${ONNX_ROOT}/onnx/test/cpp/*.cc"
@@ -453,16 +462,16 @@ if(BUILD_ONNX_PYTHON)
                                            # unsigned from include\google\protob
                                            # uf\wire_format_lite.h
                                  /wd4244 # 'argument': conversion from 'google::
-                                         # protobuf::uint64' to 'int', possible 
+                                         # protobuf::uint64' to 'int', possible
                                          # loss of data
-                                 /wd4267 # Conversion from 'size_t' to 'int', 
+                                 /wd4267 # Conversion from 'size_t' to 'int',
                                          # possible loss of data
                                  /wd4996 # The second parameter is ignored.
                                    ${EXTRA_FLAGS})
     if(ONNX_USE_PROTOBUF_SHARED_LIBS)
-      target_compile_options(onnx_cpp2py_export 
-                             PRIVATE /wd4251 # 'identifier' : class 'type1' needs to 
-                                             # have dll-interface to be used by 
+      target_compile_options(onnx_cpp2py_export
+                             PRIVATE /wd4251 # 'identifier' : class 'type1' needs to
+                                             # have dll-interface to be used by
                                              # clients of class 'type2'
                             )
     endif()
@@ -513,9 +522,9 @@ if(MSVC)
                                          # include\google\protobuf\wire_format_l
                                          # ite.h
                                  /wd4244 #'argument': conversion from 'google::
-                                         #protobuf::uint64' to 'int', possible 
+                                         #protobuf::uint64' to 'int', possible
                                          # loss of data
-                                 /wd4267 # Conversion from 'size_t' to 'int', 
+                                 /wd4267 # Conversion from 'size_t' to 'int',
                                          # possible loss of data
                                  ${EXTRA_FLAGS})
   target_compile_options(onnx
@@ -529,20 +538,20 @@ if(MSVC)
                                  /wd4146 # unary minus operator applied to
                                          # unsigned type, result still unsigned
                                  /wd4244 # 'argument': conversion from 'google::
-                                         # protobuf::uint64' to 'int', possible 
+                                         # protobuf::uint64' to 'int', possible
                                          # loss of data
-                                 /wd4267 # Conversion from 'size_t' to 'int', 
+                                 /wd4267 # Conversion from 'size_t' to 'int',
                                          # possible loss of data
                                  /wd4996 # The second parameter is ignored.
                                  ${EXTRA_FLAGS})
   if(ONNX_USE_PROTOBUF_SHARED_LIBS)
-      target_compile_options(onnx_proto 
-                             PRIVATE /wd4251 # 'identifier' : class 'type1' needs to 
-                                             # have dll-interface to be used by 
+      target_compile_options(onnx_proto
+                             PRIVATE /wd4251 # 'identifier' : class 'type1' needs to
+                                             # have dll-interface to be used by
                                              # clients of class 'type2'
                             )
-      target_compile_options(onnx 
-                             PRIVATE /wd4251 # 'identifier' : class 'type1' needs to 
+      target_compile_options(onnx
+                             PRIVATE /wd4251 # 'identifier' : class 'type1' needs to
                                              # have dll-interface to be used by
                                              # clients of class 'type2'
                             )
