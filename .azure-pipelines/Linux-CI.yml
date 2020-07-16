@@ -50,8 +50,6 @@ jobs:
       export CMAKE_ARGS=-DONNX_WERROR=ON -DONNXIFI_DUMMY_BACKEND=ON
       export ONNX_NAMESPACE=ONNX_NAMESPACE_FOO_BAR_FOR_CI
       python setup.py --quiet install
-      ./.setuptools-cmake-build/onnx_gtests
-      ./.setuptools-cmake-build/onnxifi_test_driver_gtests onnx/backend/test/data/node
     displayName: 'Install ONNX and dependencies'
 
   - script: |
@@ -59,6 +57,9 @@ jobs:
       pytest
       flake8
 
+      ./.setuptools-cmake-build/onnx_gtests
+      ./.setuptools-cmake-build/onnxifi_test_driver_gtests onnx/backend/test/data/node
+      
       python onnx/defs/gen_doc.py
       python onnx/gen_proto.py -l
       python onnx/gen_proto.py -l --ml
