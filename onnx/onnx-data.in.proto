@@ -4,52 +4,43 @@
 syntax = "proto2";
 
 package {PACKAGE_NAME};
-// #if ONNX-ML
-import "onnx/onnx-ml.proto";
-// #else
 import "onnx/onnx.proto";
-// #endif
 
 // This file contains the proto definitions for MapProto and
 // SequenceProto. These protos are used to represent the data structures
 // of maps and sequences in test data or can be used by ModelProto.
 
-// Sequences and maps are made of SequenceMapElement values, which can be
-// tensors, maps, or sequences.
-message SequenceMapElement {
+// Sequences
+//
+// Defines a dense, ordered, collection of elements that are of homogeneous types.
+// Sequences can be made out of tensors, maps, or sequences.
+message SequenceProto {
+
+  optional string name = 1;
+
   enum DataType {
     TENSOR = 1;
     SPARSE_TENSOR = 2;
     SEQUENCE = 3;
     MAP = 4;
   }
+
   // The data type of the element.
-  // This field MUST have a valid TensorProto.DataType value
-  optional int32 elem_type = 1;
+  // This field MUST have a valid SequenceProto.DataType value
+  optional int32 data_type = 2;
 
-  optional TensorProto tensor_value = 2;
-  optional SparseTensorProto sparse_tensor_value = 3;
-  optional SequenceProto sequence_value = 4;
-  optional MapProto map_value = 5;
-}
+  optional repeated TensorProto tensor_values = 3;
+  optional repeated SparseTensorProto sparse_tensor_values = 4;
+  optional repeated SequenceProto sequence_values = 5;
+  optional repeated MapProto map_values = 6;
 
-// Sequences
-//
-// Defines a dense, ordered, collection of elements that are of homogeneous types.
-message SequenceProto {
-
-  optional string name = 1;
-  repeated SequenceMapElement values = 2;
 }
 
 
 // Key-Value pair element for MapProto. The key can be an integer or string type,
 // and the value is represented by a SequenceMapElement.
 message KeyValuePair {
-  // The data type of the key.
-  // This field MUST have a valid TensorProto.DataType value of
-  // INT8, INT16, INT32, INT64, UINT8, UINT16, UINT32, UINT64, or STRING
-  optional int32 key_type = 2;
+
 
   // For int32, uint8, int8, uint16, int16 keys.
   // When this field is present, the key_type field MUST be
@@ -94,5 +85,13 @@ message KeyValuePair {
 message MapProto {
   optional string name = 1;
 
-  repeated KeyValuePair pairs = 2;
+  // All MapProto data types must have the same number of keys and values.
+
+  // The data type of the key.
+  // This field MUST have a valid TensorProto.DataType value of
+  // INT8, INT16, INT32, INT64, UINT8, UINT16, UINT32, UINT64, or STRING
+  optional int32 key_type = 2;
+  SequenceProto keys = 3;
+
+  SequenceProto values = 4;
 }
