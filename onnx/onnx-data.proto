@@ -74,7 +74,7 @@ message MapProto {
   // The data type of the key.
   // This field MUST have a valid SequenceProto.DataType value of
   // TENSOR, SPARSE_TENSOR, MAP, SEQUENCE
-  optional int32 value_type = 2;
+  optional int32 value_type = 4;
 
-  SequenceProto values = 4;
+  SequenceProto values = 5;
 }
