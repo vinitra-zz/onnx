@@ -191,27 +191,36 @@ def make_sparse_tensor(
 
 def make_sequence(
         name,  # type: Text
-        values,   # type: Sequence[SequenceMapElement]
+        elem_type, # type: int
+        values,   # type: Sequence[Any]
 ):  # type: (...) -> SequenceProto
     '''
     Make a Sequence with specified SequenceMapElement value arguments.
     '''
     sequence = SequenceProto()
     sequence.name = name
-    sequence.values.extend(values)
+    sequence.elem_type = elem_type
+    values_field = mapping.STORAGE_ELEMENT_TYPE_TO_FIELD[elem_type]
+    getattr(sequence, values_field).CopyFrom(values)
     return sequence
 
 
 def make_map(
         name,  # type: Text
-        pairs   # type: Sequence[KeyValuePair]
+        key_type,  # type: int
+        keys,  # type: Sequence[Any]
+        value_type,  # type: int
+        values   # type: Sequence[Any]
 ):  # type: (...) -> MapProto
     '''
     Make a Map with specified key-value pair arguments.
     '''
     map = MapProto()
     map.name = name
-    map.pairs.extend(pairs)
+    map.key_type = key_type
+    map.keys.CopyFrom(keys)
+    map.value_type = value_type
+    map.values.CopyFrom(values)
     return map
 
 
@@ -231,17 +240,7 @@ def make_key_value_pair(
     '''
     kv_pair = KeyValuePair()
 
-    if key_type == TensorProto.STRING:
-        assert not raw, "Can not use raw_key to store string type"
 
-    if raw:
-        kv_pair.raw_data = key
-    else:
-        storage_field = mapping.STORAGE_TENSOR_TYPE_TO_FIELD[key_type]
-        getattr(kv_pair, storage_field).CopyFrom(key)
-
-    getattr(kv_pair, value).CopyFrom(make_sequence_map_element(value, value_type))
-    kv_pair.key_type = key_type
 
     return kv_pair
 
@@ -253,10 +252,7 @@ def make_sequence_map_element(
     '''
     Make a sequence map element to store values for SequenceProto and MapProto.
     '''
-    seq_map_elem = SequenceMapElement()
-    value_field = mapping.STORAGE_ELEMENT_TYPE_TO_FIELD[value_type]
-    getattr(seq_map_elem, value_field).CopyFrom(value)
-    seq_map_elem.elem_type = value_type
+
     return seq_map_elem
 
 
