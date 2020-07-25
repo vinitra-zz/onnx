@@ -195,7 +195,7 @@ def make_sequence(
         values,   # type: Sequence[Any]
 ):  # type: (...) -> SequenceProto
     '''
-    Make a Sequence with specified SequenceMapElement value arguments.
+    Make a Sequence with specified value arguments.
     '''
     sequence = SequenceProto()
     sequence.name = name
