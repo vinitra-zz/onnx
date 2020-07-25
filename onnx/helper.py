@@ -10,8 +10,7 @@ from six import text_type, integer_types, binary_type
 import google.protobuf.message
 from onnx import TensorProto, SparseTensorProto, AttributeProto, ValueInfoProto, \
     TensorShapeProto, NodeProto, ModelProto, GraphProto, OperatorSetIdProto, \
-    TypeProto, IR_VERSION
-from onnx import SequenceProto, MapProto, SequenceMapElement, KeyValuePair
+    TypeProto, SequenceProto, MapProto, IR_VERSION
 from onnx import defs
 from onnx import mapping
 from onnx.mapping import STORAGE_TENSOR_TYPE_TO_FIELD
