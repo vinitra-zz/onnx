@@ -60,41 +60,16 @@ message MapProto {
   // The data type of the key.
   // This field MUST have a valid TensorProto.DataType value of
   // INT8, INT16, INT32, INT64, UINT8, UINT16, UINT32, UINT64, or STRING
-  optional repeated int32 key_type = 2;
+  optional int32 key_type = 2;
 
-  // For int32, uint8, int8, uint16, int16 keys.
-  // When this field is present, the key_type field MUST be
-  // INT32, INT16, INT8, UINT16, or UINT8
-  optional repeated int32 int32_data = 3;
+  // Every element of keys has to be a tensor of one of the following data types
+  // INT8, INT16, INT32, INT64, UINT8, UINT16, UINT32, UINT64, or STRING
+  SequenceProto keys = 3;
 
-  // For string keys.
-  // Each element of string_data is a UTF-8 encoded Unicode
-  // string. No trailing null, no leading BOM. The protobuf "string"
-  // scalar type is not used to match ML community conventions.
-  // When this field is present, the key_type field MUST be STRING
-  optional repeated bytes string_data = 4;
-
-  // For int64 keys.
-  // When this field is present, the key_type field MUST be INT64
-  optional repeated int64 int64_data = 5;
-
-  // For uint64 and uint32 keys.
-  // When this field is present, the key_type field MUST be
-  // UINT32 or UINT64
-  optional repeated uint64 uint64_data = 6;
-
-  // Serializations can either use one of the fields above, or use this
-  // raw bytes field. The only exception is the string case, where one is
-  // required to store the content in the repeated bytes string_data field.
-  //
-  // When this raw_data field is used to store the key, elements MUST
-  // be stored in as fixed-width, little-endian order.
-  //
-  // Note: the advantage of specific field rather than the raw_data field is
-  // that in some cases (e.g. int data), protobuf does a better packing via
-  // variable length storage, and may lead to smaller binary footprint.
-  // When this field is present, the key_type field MUST NOT be STRING or UNDEFINED
-  optional repeated bytes raw_data = 7;
+  // The data type of the key.
+  // This field MUST have a valid SequenceProto.DataType value of
+  // TENSOR, SPARSE_TENSOR, MAP, SEQUENCE
+  optional int32 value_type = 2;
 
   SequenceProto values = 4;
 }
