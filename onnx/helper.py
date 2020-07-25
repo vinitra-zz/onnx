@@ -224,38 +224,6 @@ def make_map(
     return map
 
 
-def make_key_value_pair(
-        key,  # type: Any
-        key_type,  # type: int
-        value,  # type: Any
-        value_type,  # type: int
-        raw=False  # type: bool
-):  # type: (...) -> KeyValuePair
-    '''
-    Make a KeyValuePair element for MapProto.
-    If raw is False, this function will choose the corresponding proto
-    field to store the key based on data_type. If raw is True, use "raw_key"
-    proto field to store the key, and values should be of type bytes in
-    this case.
-    '''
-    kv_pair = KeyValuePair()
-
-
-
-    return kv_pair
-
-
-def make_sequence_map_element(
-        value,  # type: Any
-        value_type  # type: int
-):  # type: (...) -> SequenceMapElement
-    '''
-    Make a sequence map element to store values for SequenceProto and MapProto.
-    '''
-
-    return seq_map_elem
-
-
 def _to_bytes_or_false(val):  # type: (Union[Text, bytes]) -> Union[bytes, bool]
     """An internal graph to convert the input to a bytes or to False.
 
