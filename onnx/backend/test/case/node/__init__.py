@@ -103,10 +103,9 @@ def function_testcase_helper(node, name):  # type: (NodeProto, Text) -> List[Nod
 
 def _extract_value_info(input, name, ele_type=None):  # type: (Union[List[Any], np.ndarray], Text, np.dtype) -> onnx.ValueInfoProto
     if isinstance(input, list):
-        print(type(input[0]))
         return onnx.helper.make_sequence_value_info(
             name=name,
-            elem_type=ele_type if ele_type else onnx.mapping.PYTHON_TYPE_TO_ELEMENT_TYPE[type(input[0])],
+            elem_type=ele_type if ele_type else onnx.mapping.PYTHON_TYPE_TO_ELEMENT_TYPE[type(input[0][0])],
             shape=None
         )
     return onnx.helper.make_tensor_value_info(
